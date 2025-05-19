@@ -1,0 +1,62 @@
+import heapq
+
+class ExamRoom:
+    def __init__(self, n):
+        self.n = n
+        self.heap = []  # max heap: (-distance, start, end)
+        self.seats = set()
+        self.intervals = {}  # (start, end): True
+
+        # 初始整段空間
+        self._add_interval(-1, n)
+
+    def _add_interval(self, start, end):
+        if start == -1:
+            dist = end
+        elif end == self.n:
+            dist = self.n - 1 - start
+        else:
+            dist = (end - start) // 2
+        heapq.heappush(self.heap, (-dist, start, end))
+        self.intervals[(start, end)] = True
+
+    def seat(self):
+        while self.heap:
+            dist, start, end = heapq.heappop(self.heap)
+            if not self.intervals.get((start, end)):
+                continue  # 被移除了，跳過
+            del self.intervals[(start, end)]
+
+            # 找座位位置
+            if start == -1:
+                seat = 0
+            elif end == self.n:
+                seat = self.n - 1
+            else:
+                seat = (start + end) // 2
+
+            # 加入左右新的空區間
+            self._add_interval(start, seat)
+            self._add_interval(seat, end)
+            self.seats.add(seat)
+            return seat
+
+    def leave(self, p):
+        self.seats.remove(p)
+
+        left, right = -1, self.n
+        for s in sorted(self.seats):
+            if s < p:
+                left = s
+            elif s > p:
+                right = s
+                break
+
+        # 清除與 p 相連的兩段空區間
+        if (left, p) in self.intervals:
+            del self.intervals[(left, p)]
+        if (p, right) in self.intervals:
+            del self.intervals[(p, right)]
+
+        # 加入合併後的空區間
+        self._add_interval(left, right)
