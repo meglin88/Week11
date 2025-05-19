@@ -1,0 +1,20 @@
+class Solution:
+    def minEatingSpeed(self, piles, h):
+        # 最小速度 = 1，最大速度 = 最大香蕉堆大小
+        left, right = 1, max(piles)
+
+        def can_finish(speed):
+            hours = 0
+            for pile in piles:
+                # 等同於 ceil(pile / speed) 的效果
+                hours += (pile + speed - 1) // speed
+            return hours <= h
+
+        while left < right:
+            mid = (left + right) // 2
+            if can_finish(mid):
+                right = mid  # 嘗試更小速度
+            else:
+                left = mid + 1  # 太慢，增加速度
+
+        return left
